@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Poker Tracker</title>
+<meta name="theme-color" content="#0f1512" />
+<meta name="description" content="Personal poker bankroll and session tracker" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icons/icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<main id="app">
+
+  <!-- HOME -->
+  <section class="screen" id="screen-home" data-screen="home">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">♠</span> Poker Tracker</div>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings">⚙</button>
+    </header>
+
+    <div id="active-banner" class="active-banner hidden">
+      <div class="active-banner-label">Session in progress</div>
+      <div class="active-banner-detail" id="active-banner-detail"></div>
+      <button class="btn btn-primary" id="btn-resume">Resume Session</button>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">This Month</div>
+        <div class="stat-value" id="stat-month">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">YTD</div>
+        <div class="stat-value" id="stat-ytd">$0</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-large" id="btn-checkin">Check In</button>
+
+    <div class="section-head">
+      <h2>Recent Sessions</h2>
+      <a href="#" id="link-history">View all</a>
+    </div>
+    <div id="recent-list" class="session-list"></div>
+  </section>
+
+  <!-- CHECK-IN -->
+  <section class="screen hidden" id="screen-checkin" data-screen="checkin">
+    <header class="topbar">
+      <button class="icon-btn" id="checkin-back" aria-label="Back">←</button>
+      <div class="brand">New Session</div>
+      <span class="icon-btn-spacer"></span>
+    </header>
+
+    <div class="form">
+      <label class="field">
+        <span class="field-label">Where are you playing?</span>
+        <input type="text" id="input-location" list="location-options" placeholder="e.g. Harrah's Cherokee" autocomplete="off" />
+        <datalist id="location-options"></datalist>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Game</span>
+        <input type="text" id="input-game" list="game-options" placeholder="e.g. $2/5 NLHE" autocomplete="off" />
+        <datalist id="game-options"></datalist>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Buy-in amount</span>
+        <div class="money-input">
+          <span>$</span>
+          <input type="number" id="input-buyin" inputmode="decimal" min="0" step="1" placeholder="0" />
+        </div>
+      </label>
+
+      <button class="btn btn-primary btn-large" id="btn-do-checkin">Check In</button>
+    </div>
+  </section>
+
+  <!-- ACTIVE SESSION -->
+  <section class="screen hidden" id="screen-active" data-screen="active">
+    <header class="topbar">
+      <button class="icon-btn" id="active-home" aria-label="Home">←</button>
+      <div class="brand">Active Session</div>
+      <span class="icon-btn-spacer"></span>
+    </header>
+
+    <div class="active-card">
+      <div class="active-location" id="active-location">—</div>
+      <div class="active-game" id="active-game">—</div>
+      <div class="active-timer" id="active-timer">00:00:00</div>
+    </div>
+
+    <div class="invested-card">
+      <div class="stat-label">Total Invested</div>
+      <div class="invested-value" id="active-invested">$0</div>
+      <div class="invested-sub" id="active-invested-sub"></div>
+    </div>
+
+    <div id="addon-list" class="addon-list"></div>
+
+    <div class="action-row">
+      <button class="btn btn-secondary" id="btn-addon">+ Add-On</button>
+      <button class="btn btn-danger" id="btn-cashout">Cash Out</button>
+    </div>
+  </section>
+
+  <!-- REPORT -->
+  <section class="screen hidden" id="screen-report" data-screen="report">
+    <header class="topbar">
+      <span class="icon-btn-spacer"></span>
+      <div class="brand">Session Report</div>
+      <span class="icon-btn-spacer"></span>
+    </header>
+
+    <div class="report-hero" id="report-hero">
+      <div class="report-hero-label">Session Result</div>
+      <div class="report-hero-value" id="report-profit">$0</div>
+      <div class="report-hero-sub" id="report-location">—</div>
+    </div>
+
+    <div class="report-grid">
+      <div class="report-tile">
+        <div class="report-tile-label">Duration</div>
+        <div class="report-tile-value" id="report-duration">0h 0m</div>
+      </div>
+      <div class="report-tile">
+        <div class="report-tile-label">Profit / Hour</div>
+        <div class="report-tile-value" id="report-pph">$0</div>
+      </div>
+      <div class="report-tile">
+        <div class="report-tile-label">This Month</div>
+        <div class="report-tile-value" id="report-month">$0</div>
+      </div>
+      <div class="report-tile">
+        <div class="report-tile-label">Year to Date</div>
+        <div class="report-tile-value" id="report-ytd">$0</div>
+      </div>
+    </div>
+
+    <div class="report-notes" id="report-notes-wrap" hidden>
+      <div class="report-note-block">
+        <div class="report-note-label good">Good</div>
+        <div class="report-note-text" id="report-good"></div>
+      </div>
+      <div class="report-note-block">
+        <div class="report-note-label bad">Bad</div>
+        <div class="report-note-text" id="report-bad"></div>
+      </div>
+      <div class="report-note-block" id="report-action-wrap" hidden>
+        <div class="report-note-label action">Needs Action</div>
+        <div class="report-note-text" id="report-action"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-large" id="btn-report-done">Done</button>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="screen hidden" id="screen-history" data-screen="history">
+    <header class="topbar">
+      <button class="icon-btn" id="history-back" aria-label="Back">←</button>
+      <div class="brand">History</div>
+      <button class="icon-btn" id="btn-export-csv-history" aria-label="Export CSV">⇩</button>
+    </header>
+    <div id="history-list" class="session-list session-list-full"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen hidden" id="screen-settings" data-screen="settings">
+    <header class="topbar">
+      <button class="icon-btn" id="settings-back" aria-label="Back">←</button>
+      <div class="brand">Settings</div>
+      <span class="icon-btn-spacer"></span>
+    </header>
+
+    <div class="form">
+      <div class="settings-block">
+        <h3>Google Sheets Sync</h3>
+        <p class="hint">Paste the Web App URL from your deployed Apps Script. See README for setup steps.</p>
+        <label class="field">
+          <span class="field-label">Apps Script Web App URL</span>
+          <input type="url" id="input-sheets-url" placeholder="https://script.google.com/macros/s/.../exec" />
+        </label>
+        <button class="btn btn-secondary" id="btn-save-sheets">Save</button>
+        <button class="btn btn-ghost" id="btn-sync-now">Sync Now</button>
+        <div class="hint" id="sync-status">Not configured</div>
+      </div>
+
+      <div class="settings-block">
+        <h3>Backup &amp; Export</h3>
+        <button class="btn btn-secondary" id="btn-export-csv">Export CSV</button>
+      </div>
+
+      <div class="settings-block danger">
+        <h3>Danger Zone</h3>
+        <button class="btn btn-danger-outline" id="btn-clear-data">Clear All Data</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- DIALOGS -->
+<dialog id="dlg-addon">
+  <form method="dialog" class="dialog-form">
+    <h3>Add-On</h3>
+    <label class="field">
+      <span class="field-label">Amount</span>
+      <div class="money-input">
+        <span>$</span>
+        <input type="number" id="dlg-addon-amount" inputmode="decimal" min="0" step="1" placeholder="0" />
+      </div>
+    </label>
+    <div class="dialog-actions">
+      <button value="cancel" class="btn btn-ghost">Cancel</button>
+      <button value="confirm" id="dlg-addon-confirm" class="btn btn-primary">Add</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-cashout">
+  <form method="dialog" class="dialog-form">
+    <h3>Cash Out</h3>
+    <p class="hint">Enter 0 if you busted out.</p>
+    <label class="field">
+      <span class="field-label">Cash-out amount</span>
+      <div class="money-input">
+        <span>$</span>
+        <input type="number" id="dlg-cashout-amount" inputmode="decimal" min="0" step="1" value="0" />
+      </div>
+    </label>
+    <div class="dialog-actions">
+      <button value="cancel" class="btn btn-ghost">Cancel</button>
+      <button value="confirm" id="dlg-cashout-confirm" class="btn btn-danger">Cash Out</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-notes-prompt">
+  <form method="dialog" class="dialog-form">
+    <h3>Add notes for this session?</h3>
+    <div class="dialog-actions">
+      <button value="skip" id="dlg-notes-skip" class="btn btn-ghost">Skip</button>
+      <button value="add" id="dlg-notes-add" class="btn btn-primary">Add Notes</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-notes-good">
+  <form method="dialog" class="dialog-form">
+    <h3>What went well?</h3>
+    <textarea id="dlg-good-text" rows="4" placeholder="The good of the session..."></textarea>
+    <div class="dialog-actions">
+      <button value="next" id="dlg-good-next" class="btn btn-primary">Next</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-notes-bad">
+  <form method="dialog" class="dialog-form">
+    <h3>What could've gone better?</h3>
+    <textarea id="dlg-bad-text" rows="4" placeholder="The bad of the session..."></textarea>
+    <div class="dialog-actions">
+      <button value="next" id="dlg-bad-next" class="btn btn-primary">Next</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-notes-action">
+  <form method="dialog" class="dialog-form">
+    <h3>Anything that needs action or attention?</h3>
+    <p class="hint">A leak to fix, a rule to check, a follow-up — leave blank if nothing.</p>
+    <textarea id="dlg-action-text" rows="4" placeholder="Needs action or attention..."></textarea>
+    <div class="dialog-actions">
+      <button value="save" id="dlg-action-save" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-confirm">
+  <form method="dialog" class="dialog-form">
+    <h3 id="dlg-confirm-title">Are you sure?</h3>
+    <p class="hint" id="dlg-confirm-body"></p>
+    <div class="dialog-actions">
+      <button value="cancel" class="btn btn-ghost">Cancel</button>
+      <button value="confirm" id="dlg-confirm-confirm" class="btn btn-danger">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

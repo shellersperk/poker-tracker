@@ -1,0 +1,14 @@
+{
+  "name": "Poker Tracker",
+  "short_name": "PokerTrack",
+  "description": "Personal poker bankroll and session tracker",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1310",
+  "theme_color": "#0f1310",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
