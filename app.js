@@ -736,7 +736,21 @@
     attemptSync();
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+      navigator.serviceWorker.register('service-worker.js').then(reg => {
+        reg.update().catch(() => {});
+      }).catch(() => {});
+
+      // A new service worker activates (skipWaiting + clients.claim, set in
+      // service-worker.js) as soon as it finishes installing. Reload once
+      // that handoff happens so the new app.js/index.html/styles.css take
+      // effect immediately instead of waiting on the user to reopen the app
+      // the right number of times.
+      let refreshedOnce = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshedOnce) return;
+        refreshedOnce = true;
+        location.reload();
+      });
     }
   }
 

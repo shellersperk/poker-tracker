@@ -1,4 +1,4 @@
-const CACHE = 'poker-tracker-v4';
+const CACHE = 'poker-tracker-v5';
 const ASSETS = [
   './',
   './index.html',
