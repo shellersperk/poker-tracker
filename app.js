@@ -594,6 +594,23 @@
     renderSyncStatus();
   }
 
+  // ---------- datalist UX fix ----------
+  // Browsers filter datalist suggestions by the field's current text, so a
+  // pre-filled default (e.g. "$2/5 NLHE") hides every other option (e.g.
+  // "$5/10 PLO") until the field is cleared. Clear on focus so the full
+  // list shows, and restore the default if the field is left empty.
+  function setupDatalistDefault(input) {
+    input.addEventListener('focus', () => {
+      input.dataset.prevValue = input.value;
+      input.value = '';
+    });
+    input.addEventListener('blur', () => {
+      if (!input.value.trim() && input.dataset.prevValue) {
+        input.value = input.dataset.prevValue;
+      }
+    });
+  }
+
   // ---------- wiring ----------
   function init() {
     document.getElementById('btn-settings').addEventListener('click', () => showScreen('settings'));
@@ -603,6 +620,10 @@
     document.getElementById('btn-save-past').addEventListener('click', savePastSession);
     document.getElementById('past-date').addEventListener('change', applyPastDefaults);
     document.getElementById('past-start').addEventListener('change', applyPastDefaults);
+
+    ['input-location', 'input-game', 'past-location', 'past-game'].forEach(id =>
+      setupDatalistDefault(document.getElementById(id))
+    );
     document.getElementById('btn-resume').addEventListener('click', () => showScreen('active'));
     document.getElementById('link-history').addEventListener('click', e => { e.preventDefault(); showScreen('history'); });
 
