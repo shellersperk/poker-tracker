@@ -328,7 +328,7 @@
 
     const recent = sessions.filter(s => s.status === 'completed')
       .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn))
-      .slice(0, 5);
+      .slice(0, 3);
     const list = document.getElementById('recent-list');
     list.innerHTML = '';
     if (!recent.length) {
@@ -336,6 +336,67 @@
     } else {
       recent.forEach(s => list.appendChild(buildSessionRow(s)));
     }
+
+    renderTrendChart(sessions);
+  }
+
+  // ---------- render: 3-month trend chart ----------
+  function renderTrendChart(sessions) {
+    const container = document.getElementById('trend-chart');
+    if (!container) return;
+    const now = new Date();
+    const months = [0, 1, 2].map(i => new Date(now.getFullYear(), now.getMonth() - (2 - i), 1));
+    const data = months.map(d => ({
+      label: d.toLocaleDateString('en-US', { month: 'short' }),
+      value: sumProfit(sessions, s => {
+        const sd = new Date(s.checkIn);
+        return sd.getFullYear() === d.getFullYear() && sd.getMonth() === d.getMonth();
+      })
+    }));
+
+    const totalEl = document.getElementById('trend-total');
+    const total = data.reduce((sum, d) => sum + d.value, 0);
+    totalEl.textContent = formatMoney(total);
+    totalEl.className = 'trend-total ' + (total > 0 ? 'positive' : total < 0 ? 'negative' : '');
+
+    const maxAbs = Math.max(1, ...data.map(d => Math.abs(d.value)));
+    const TRACK_H = 52;
+    container.innerHTML = '';
+    data.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'trend-col';
+
+      const value = document.createElement('div');
+      value.className = 'trend-value ' + (d.value > 0 ? 'positive' : d.value < 0 ? 'negative' : '');
+      value.textContent = formatMoney(d.value);
+
+      const track = document.createElement('div');
+      track.className = 'trend-track';
+      const top = document.createElement('div');
+      top.className = 'trend-top';
+      const bottom = document.createElement('div');
+      bottom.className = 'trend-bottom';
+      const bar = document.createElement('div');
+      const barHeight = Math.round((Math.abs(d.value) / maxAbs) * (TRACK_H - 4));
+      bar.style.height = Math.max(d.value === 0 ? 0 : 3, barHeight) + 'px';
+      if (d.value >= 0) {
+        bar.className = 'trend-bar positive';
+        top.appendChild(bar);
+      } else {
+        bar.className = 'trend-bar negative';
+        bottom.appendChild(bar);
+      }
+      const baseline = document.createElement('div');
+      baseline.className = 'trend-baseline';
+      track.append(top, baseline, bottom);
+
+      const month = document.createElement('div');
+      month.className = 'trend-month';
+      month.textContent = d.label;
+
+      col.append(value, track, month);
+      container.appendChild(col);
+    });
   }
   function setStat(id, value) {
     const el = document.getElementById(id);

@@ -7,8 +7,9 @@
 <meta name="theme-color" content="#0f1512" />
 <meta name="description" content="Personal poker bankroll and session tracker" />
 <link rel="manifest" href="manifest.json" />
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="icons/icon.svg" />
+<link rel="icon" href="icons/icon-32.png" type="image/png" sizes="32x32" />
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="stylesheet" href="styles.css" />
@@ -45,6 +46,14 @@
 
     <button class="btn btn-primary btn-large" id="btn-checkin">Check In</button>
     <button class="btn btn-ghost" id="btn-past-session">Log a Past Session</button>
+
+    <div class="trend-card">
+      <div class="trend-head">
+        <span>3-Month Trend</span>
+        <span id="trend-total" class="trend-total"></span>
+      </div>
+      <div id="trend-chart" class="trend-chart"></div>
+    </div>
 
     <div class="section-head">
       <h2>Recent Sessions</h2>
