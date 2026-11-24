@@ -173,6 +173,25 @@ html, body {
 .session-row-profit { font-weight: 700; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .session-row-profit.positive { color: var(--green-bright); }
 .session-row-profit.negative { color: var(--red-bright); }
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 650;
+  margin-top: 5px;
+}
+.sync-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sync-badge.synced { color: var(--green-bright); }
+.sync-badge.synced::before { background: var(--green-bright); }
+.sync-badge.pending { color: var(--gold); }
+.sync-badge.pending::before { background: var(--gold); }
 .session-row-notes {
   margin-top: 10px;
   padding-top: 10px;

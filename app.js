@@ -234,6 +234,11 @@
     saveQueue(remaining);
     if (remaining.length < q.length) setLastSynced(new Date().toISOString());
     renderSyncStatus();
+    refreshSyncBadges();
+  }
+  function refreshSyncBadges() {
+    if (!document.getElementById('screen-home').classList.contains('hidden')) renderHome();
+    if (!document.getElementById('screen-history').classList.contains('hidden')) renderHistory();
   }
   function renderSyncStatus() {
     const el = document.getElementById('sync-status');
@@ -314,6 +319,14 @@
     el.className = 'stat-value ' + (value > 0 ? 'positive' : value < 0 ? 'negative' : '');
   }
 
+  function syncBadgeHtml(s) {
+    if (!getSheetsUrl()) return '';
+    const pending = loadQueue().includes(s.id);
+    return pending
+      ? '<div class="sync-badge pending">Pending sync</div>'
+      : '<div class="sync-badge synced">Synced</div>';
+  }
+
   function buildSessionRow(s) {
     const invested = totalInvested(s);
     const profit = profitOf(s);
@@ -327,6 +340,7 @@
       <div class="session-row-main">
         <div class="session-row-title">${escapeHtml(s.location || 'Session')}</div>
         <div class="session-row-sub">${formatDateShort(s.checkIn)} · ${escapeHtml(s.game || '')} · ${formatDuration(hours)}</div>
+        ${syncBadgeHtml(s)}
       </div>
       <div class="session-row-profit ${profit >= 0 ? 'positive' : 'negative'}">${formatMoney(profit)}</div>
     `;
