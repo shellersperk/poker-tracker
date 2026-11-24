@@ -221,6 +221,26 @@ input[type=text], input[type=number], input[type=url], input[type=date], input[t
 textarea { resize: vertical; }
 input:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
 
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -8px;
+}
+.chip-row:empty { display: none; }
+.chip {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 650;
+  font-family: inherit;
+  cursor: pointer;
+}
+.chip:active { background: var(--gold-dim); color: #1a1a0d; border-color: var(--gold-dim); }
+
 .money-input {
   display: flex;
   align-items: center;

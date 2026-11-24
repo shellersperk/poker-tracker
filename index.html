@@ -67,12 +67,14 @@
         <input type="text" id="input-location" list="location-options" placeholder="e.g. Harrah's Cherokee" autocomplete="off" />
         <datalist id="location-options"></datalist>
       </label>
+      <div class="chip-row" id="checkin-location-chips"></div>
 
       <label class="field">
         <span class="field-label">Game</span>
         <input type="text" id="input-game" list="game-options" placeholder="e.g. $2/5 NLHE" autocomplete="off" />
         <datalist id="game-options"></datalist>
       </label>
+      <div class="chip-row" id="checkin-game-chips"></div>
 
       <label class="field">
         <span class="field-label">Buy-in amount</span>
@@ -81,6 +83,7 @@
           <input type="number" id="input-buyin" inputmode="decimal" min="0" step="1" placeholder="0" />
         </div>
       </label>
+      <div class="chip-row" id="checkin-buyin-chips"></div>
 
       <button class="btn btn-primary btn-large" id="btn-do-checkin">Check In</button>
     </div>
@@ -115,21 +118,25 @@
         <span class="field-label">Where did you play?</span>
         <input type="text" id="past-location" list="location-options" placeholder="e.g. Harrah's Cherokee" autocomplete="off" />
       </label>
+      <div class="chip-row" id="past-location-chips"></div>
 
       <label class="field">
         <span class="field-label">Game</span>
         <input type="text" id="past-game" list="game-options" placeholder="e.g. $2/5 NLHE" autocomplete="off" />
       </label>
+      <div class="chip-row" id="past-game-chips"></div>
 
       <label class="field">
         <span class="field-label">Buy-in amount</span>
         <div class="money-input"><span>$</span><input type="number" id="past-buyin" inputmode="decimal" min="0" step="1" placeholder="0" /></div>
       </label>
+      <div class="chip-row" id="past-buyin-chips"></div>
 
       <label class="field">
         <span class="field-label">Add-ons (total)</span>
         <div class="money-input"><span>$</span><input type="number" id="past-addons" inputmode="decimal" min="0" step="1" placeholder="0" /></div>
       </label>
+      <div class="chip-row" id="past-addons-chips"></div>
 
       <label class="field">
         <span class="field-label">Cash-out amount</span>
@@ -288,6 +295,7 @@
         <input type="number" id="dlg-addon-amount" inputmode="decimal" min="0" step="1" placeholder="0" />
       </div>
     </label>
+    <div class="chip-row" id="addon-chips"></div>
     <div class="dialog-actions">
       <button value="cancel" class="btn btn-ghost">Cancel</button>
       <button value="confirm" id="dlg-addon-confirm" class="btn btn-primary">Add</button>

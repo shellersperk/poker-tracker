@@ -143,6 +143,30 @@
     }
     return out;
   }
+  function topFrequent(sessions, keyFn, n) {
+    const counts = new Map();
+    for (const s of sessions) {
+      const k = keyFn(s);
+      if (k === '' || k == null) continue;
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(e => e[0]);
+  }
+
+  // ---------- quick-pick chips ----------
+  const REBUY_PRESETS = [100, 200, 300, 500];
+  function buildChips(container, values, onPick, formatFn) {
+    if (!container) return;
+    container.innerHTML = '';
+    values.forEach(v => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.textContent = formatFn ? formatFn(v) : v;
+      chip.addEventListener('click', () => onPick(v));
+      container.appendChild(chip);
+    });
+  }
 
   // ---------- CSV ----------
   function sessionToRow(s) {
@@ -375,6 +399,13 @@
     locList.innerHTML = distinctRecent(sessions, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
     const gameList = document.getElementById('game-options');
     gameList.innerHTML = distinctRecent(sessions, s => s.game).map(v => `<option value="${escapeHtml(v)}">`).join('');
+
+    buildChips(document.getElementById('checkin-location-chips'), topFrequent(sessions, s => s.location, 4),
+      v => { document.getElementById('input-location').value = v; });
+    buildChips(document.getElementById('checkin-game-chips'), topFrequent(sessions, s => s.game, 4),
+      v => { document.getElementById('input-game').value = v; });
+    buildChips(document.getElementById('checkin-buyin-chips'), topFrequent(sessions, s => s.buyIn, 4),
+      v => { document.getElementById('input-buyin').value = v; }, formatMoney);
   }
 
   function doCheckin() {
@@ -429,6 +460,15 @@
     locList.innerHTML = distinctRecent(sessions, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
     const gameList = document.getElementById('game-options');
     gameList.innerHTML = distinctRecent(sessions, s => s.game).map(v => `<option value="${escapeHtml(v)}">`).join('');
+
+    buildChips(document.getElementById('past-location-chips'), topFrequent(sessions, s => s.location, 4),
+      v => { document.getElementById('past-location').value = v; });
+    buildChips(document.getElementById('past-game-chips'), topFrequent(sessions, s => s.game, 4),
+      v => { document.getElementById('past-game').value = v; });
+    buildChips(document.getElementById('past-buyin-chips'), topFrequent(sessions, s => s.buyIn, 4),
+      v => { document.getElementById('past-buyin').value = v; }, formatMoney);
+    buildChips(document.getElementById('past-addons-chips'), REBUY_PRESETS,
+      v => { document.getElementById('past-addons').value = v; }, formatMoney);
   }
 
   function savePastSession() {
@@ -645,6 +685,8 @@
     document.getElementById('btn-do-checkin').addEventListener('click', doCheckin);
 
     document.getElementById('active-home').addEventListener('click', () => showScreen('home'));
+    buildChips(document.getElementById('addon-chips'), REBUY_PRESETS,
+      v => { document.getElementById('dlg-addon-amount').value = v; }, formatMoney);
     document.getElementById('btn-addon').addEventListener('click', () => {
       document.getElementById('dlg-addon-amount').value = '';
       document.getElementById('dlg-addon').showModal();
