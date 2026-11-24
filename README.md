@@ -51,9 +51,7 @@ This app has no backend server, so sync works through a small Google Apps Script
 6. Copy the **Web app URL** it gives you (ends in `/exec`).
 7. In Poker Tracker, go to **Settings → Google Sheets Sync**, paste the URL, tap **Save**.
 
-Every time you cash out, the session is sent to your Sheet automatically (and retried on next app open if you were offline). A "Sessions" tab is created automatically with headers.
-
-**Known limitation:** because there's no backend, the app can't read the response from Google (a browser security restriction on cross-origin requests to Apps Script). So "Sync Now" always says "attempted" rather than confirming success — check your Sheet directly the first time to confirm it's wired up correctly.
+Every time you cash out, the session is sent to your Sheet automatically and verified — Apps Script's response is checked, so a session only clears from the sync queue once it's actually confirmed written. If you were offline or the URL is wrong, it stays queued and retries next time the app opens (or when you tap **Sync Now**, which will tell you plainly if anything failed).
 
 ## Backup
 

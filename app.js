@@ -219,12 +219,13 @@
       const s = sessions.find(x => x.id === id);
       if (!s) continue;
       try {
-        await fetch(url, {
+        const res = await fetch(url, {
           method: 'POST',
-          mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(sessionToRow(s))
         });
+        const data = await res.json();
+        if (!res.ok || data.ok !== true) throw new Error('sync failed');
       } catch {
         remaining.push(id);
       }
@@ -241,7 +242,7 @@
     if (!url) { el.textContent = 'Not configured'; return; }
     const last = getLastSynced();
     const lastStr = last ? new Date(last).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'never';
-    el.textContent = `Last sent: ${lastStr}${q.length ? ` · ${q.length} pending` : ''}`;
+    el.textContent = `Last synced: ${lastStr}${q.length ? ` · ${q.length} pending` : ''}`;
   }
 
   // ---------- toast ----------
@@ -656,9 +657,13 @@
       renderSyncStatus();
     });
     document.getElementById('btn-sync-now').addEventListener('click', async () => {
+      const before = loadQueue().length;
+      if (!before) { toast('Nothing to sync'); return; }
       toast('Syncing…');
       await attemptSync();
-      toast('Sync attempted — check your Sheet to confirm');
+      const after = loadQueue().length;
+      if (after === 0) toast('Synced successfully');
+      else toast(`${after} session(s) failed to sync — check the URL in Settings`);
     });
     document.getElementById('btn-export-csv').addEventListener('click', downloadCSV);
 
