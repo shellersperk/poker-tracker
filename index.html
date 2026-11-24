@@ -44,6 +44,7 @@
     </div>
 
     <button class="btn btn-primary btn-large" id="btn-checkin">Check In</button>
+    <button class="btn btn-ghost" id="btn-past-session">Log a Past Session</button>
 
     <div class="section-head">
       <h2>Recent Sessions</h2>
@@ -82,6 +83,73 @@
       </label>
 
       <button class="btn btn-primary btn-large" id="btn-do-checkin">Check In</button>
+    </div>
+  </section>
+
+  <!-- LOG PAST SESSION -->
+  <section class="screen hidden" id="screen-past" data-screen="past">
+    <header class="topbar">
+      <button class="icon-btn" id="past-back" aria-label="Back">←</button>
+      <div class="brand">Log Past Session</div>
+      <span class="icon-btn-spacer"></span>
+    </header>
+
+    <div class="form">
+      <div class="two-col">
+        <label class="field">
+          <span class="field-label">Date</span>
+          <input type="date" id="past-date" />
+        </label>
+        <label class="field">
+          <span class="field-label">Start time</span>
+          <input type="time" id="past-start" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Duration (hours)</span>
+        <input type="number" id="past-duration" inputmode="decimal" min="0" step="0.25" placeholder="e.g. 4.5" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Where did you play?</span>
+        <input type="text" id="past-location" list="location-options" placeholder="e.g. Harrah's Cherokee" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Game</span>
+        <input type="text" id="past-game" list="game-options" placeholder="e.g. $2/5 NLHE" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Buy-in amount</span>
+        <div class="money-input"><span>$</span><input type="number" id="past-buyin" inputmode="decimal" min="0" step="1" placeholder="0" /></div>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Add-ons (total)</span>
+        <div class="money-input"><span>$</span><input type="number" id="past-addons" inputmode="decimal" min="0" step="1" placeholder="0" /></div>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Cash-out amount</span>
+        <div class="money-input"><span>$</span><input type="number" id="past-cashout" inputmode="decimal" min="0" step="1" placeholder="0" /></div>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Good (optional)</span>
+        <textarea id="past-good" rows="2" placeholder="What went well..."></textarea>
+      </label>
+      <label class="field">
+        <span class="field-label">Bad (optional)</span>
+        <textarea id="past-bad" rows="2" placeholder="What could've gone better..."></textarea>
+      </label>
+      <label class="field">
+        <span class="field-label">Needs Action (optional)</span>
+        <textarea id="past-action" rows="2" placeholder="Needs action or attention..."></textarea>
+      </label>
+
+      <button class="btn btn-primary btn-large" id="btn-save-past">Save Session</button>
     </div>
   </section>
 

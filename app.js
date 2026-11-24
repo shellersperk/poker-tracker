@@ -66,6 +66,12 @@
   function formatTime(iso) {
     return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   }
+  function localDateStr(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
   function formatDateShort(iso) {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
@@ -122,6 +128,10 @@
 
     return { location, game, buyIn };
   }
+  function timeBucketLabel(date) {
+    const b = dayBucket(date);
+    return b.charAt(0).toUpperCase() + b.slice(1);
+  }
   function distinctRecent(sessions, keyFn) {
     const seen = new Set();
     const out = [];
@@ -139,9 +149,12 @@
     const hours = durationHours(s);
     const profit = s.status === 'completed' ? profitOf(s) : '';
     const pph = (s.status === 'completed' && hours > (1 / 60)) ? profit / hours : '';
+    const checkInDate = s.checkIn ? new Date(s.checkIn) : null;
     return {
       id: s.id,
-      date: (s.checkIn || '').slice(0, 10),
+      date: checkInDate ? localDateStr(checkInDate) : '',
+      dayOfWeek: checkInDate ? checkInDate.toLocaleDateString('en-US', { weekday: 'long' }) : '',
+      timeOfDay: checkInDate ? timeBucketLabel(checkInDate) : '',
       checkIn: s.checkIn || '',
       checkOut: s.checkOut || '',
       location: s.location || '',
@@ -164,14 +177,14 @@
     return s;
   }
   function toCSV(sessions) {
-    const headers = ['Date', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
+    const headers = ['Date', 'Day of Week', 'Time of Day', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
       'Total Invested', 'Cash-Out', 'Profit', 'Duration (hrs)', 'Profit/Hr', 'Good', 'Bad', 'Needs Action'];
     const rows = sessions.filter(s => s.status === 'completed')
       .sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn))
       .map(sessionToRow);
     const lines = [headers.join(',')];
     for (const r of rows) {
-      lines.push([r.date, r.checkIn, r.checkOut, r.location, r.game, r.buyIn, r.addOns,
+      lines.push([r.date, r.dayOfWeek, r.timeOfDay, r.checkIn, r.checkOut, r.location, r.game, r.buyIn, r.addOns,
         r.totalInvested, r.cashOut, r.profit, r.durationHours, r.profitPerHour,
         r.notesGood, r.notesBad, r.notesAction].map(csvEscape).join(','));
     }
@@ -183,7 +196,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `poker-sessions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `poker-sessions-${localDateStr(new Date())}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -254,6 +267,7 @@
     window.scrollTo(0, 0);
     if (name === 'home') renderHome();
     if (name === 'checkin') renderCheckin();
+    if (name === 'past') renderPast();
     if (name === 'active') renderActive();
     if (name === 'history') renderHistory();
     if (name === 'settings') renderSettings();
@@ -367,6 +381,67 @@
     sessions.push(session);
     saveSessions(sessions);
     showScreen('active');
+  }
+
+  // ---------- render: log past session ----------
+  function renderPast() {
+    const sessions = loadSessions();
+    const defaults = computeDefaults(sessions);
+    const yesterday = new Date(Date.now() - 86400000);
+
+    document.getElementById('past-date').value = localDateStr(yesterday);
+    document.getElementById('past-start').value = '19:00';
+    document.getElementById('past-duration').value = '';
+    document.getElementById('past-location').value = defaults.location;
+    document.getElementById('past-game').value = defaults.game;
+    document.getElementById('past-buyin').value = defaults.buyIn;
+    document.getElementById('past-addons').value = '';
+    document.getElementById('past-cashout').value = '';
+    document.getElementById('past-good').value = '';
+    document.getElementById('past-bad').value = '';
+    document.getElementById('past-action').value = '';
+
+    const locList = document.getElementById('location-options');
+    locList.innerHTML = distinctRecent(sessions, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
+    const gameList = document.getElementById('game-options');
+    gameList.innerHTML = distinctRecent(sessions, s => s.game).map(v => `<option value="${escapeHtml(v)}">`).join('');
+  }
+
+  function savePastSession() {
+    const dateStr = document.getElementById('past-date').value;
+    const timeStr = document.getElementById('past-start').value;
+    const duration = Number(document.getElementById('past-duration').value);
+    const location = document.getElementById('past-location').value.trim();
+    const game = document.getElementById('past-game').value.trim();
+    const buyIn = Number(document.getElementById('past-buyin').value) || 0;
+    const addOnsTotal = Number(document.getElementById('past-addons').value) || 0;
+    const cashOut = Number(document.getElementById('past-cashout').value) || 0;
+    const good = document.getElementById('past-good').value.trim();
+    const bad = document.getElementById('past-bad').value.trim();
+    const action = document.getElementById('past-action').value.trim();
+
+    if (!dateStr || !timeStr) { toast('Enter a date and start time'); return; }
+    if (!(duration > 0)) { toast('Enter a duration greater than 0'); return; }
+    if (!location) { toast('Enter where you played'); return; }
+
+    const checkIn = new Date(`${dateStr}T${timeStr}`).toISOString();
+    const checkOut = new Date(new Date(checkIn).getTime() + duration * 3600000).toISOString();
+
+    const session = {
+      id: uid(),
+      checkIn, checkOut, location, game, buyIn,
+      addOns: addOnsTotal > 0 ? [{ amount: addOnsTotal, time: checkIn }] : [],
+      cashOut,
+      notes: (good || bad || action) ? { good, bad, action } : null,
+      status: 'completed'
+    };
+
+    const sessions = loadSessions();
+    sessions.push(session);
+    saveSessions(sessions);
+    queueSync(session.id);
+    renderReport(session, sessions);
+    showScreen('report');
   }
 
   // ---------- render: active session ----------
@@ -513,6 +588,9 @@
   function init() {
     document.getElementById('btn-settings').addEventListener('click', () => showScreen('settings'));
     document.getElementById('btn-checkin').addEventListener('click', () => showScreen('checkin'));
+    document.getElementById('btn-past-session').addEventListener('click', () => showScreen('past'));
+    document.getElementById('past-back').addEventListener('click', () => showScreen('home'));
+    document.getElementById('btn-save-past').addEventListener('click', savePastSession);
     document.getElementById('btn-resume').addEventListener('click', () => showScreen('active'));
     document.getElementById('link-history').addEventListener('click', e => { e.preventDefault(); showScreen('history'); });
 

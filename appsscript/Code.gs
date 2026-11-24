@@ -3,7 +3,7 @@
 // then deploy it as a Web App (see README.md for the full walkthrough).
 
 const SHEET_NAME = 'Sessions';
-const HEADERS = ['Date', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
+const HEADERS = ['Date', 'Day of Week', 'Time of Day', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
   'Total Invested', 'Cash-Out', 'Profit', 'Duration (hrs)', 'Profit/Hr', 'Good', 'Bad', 'Needs Action', 'Session ID'];
 
 function getSheet_() {
@@ -28,10 +28,10 @@ function doPost(e) {
   const existingIndex = ids.indexOf(row.id);
 
   const values = [
-    row.date || '', row.checkIn || '', row.checkOut || '', row.location || '', row.game || '',
-    row.buyIn || 0, row.addOns || 0, row.totalInvested || 0, row.cashOut || 0, row.profit || 0,
-    row.durationHours || '', row.profitPerHour || '', row.notesGood || '', row.notesBad || '',
-    row.notesAction || '', row.id || ''
+    row.date || '', row.dayOfWeek || '', row.timeOfDay || '', row.checkIn || '', row.checkOut || '',
+    row.location || '', row.game || '', row.buyIn || 0, row.addOns || 0, row.totalInvested || 0,
+    row.cashOut || 0, row.profit || 0, row.durationHours || '', row.profitPerHour || '',
+    row.notesGood || '', row.notesBad || '', row.notesAction || '', row.id || ''
   ];
 
   if (existingIndex >= 0) {
