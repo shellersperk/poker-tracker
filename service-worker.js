@@ -1,4 +1,4 @@
-const CACHE = 'poker-tracker-v8';
+const CACHE = 'poker-tracker-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -12,8 +12,14 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
+  // GitHub Pages serves these with Cache-Control: max-age=600, so a plain
+  // fetch() here can be satisfied straight from the browser's HTTP cache
+  // and silently re-store the SAME stale bytes under the new cache name.
+  // { cache: 'reload' } forces every precache fetch to hit the network.
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(cache => cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
   );
 });
 
