@@ -12,6 +12,9 @@
   --green-bright: #3fb573;
   --red: #c0453a;
   --red-bright: #e0594c;
+  --crimson: #c6283f;
+  --crimson-dim: #7a1722;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --radius: 16px;
   --radius-sm: 10px;
   --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 12px 28px -18px rgba(0,0,0,0.65);
@@ -57,17 +60,33 @@ html, body {
   background: linear-gradient(to bottom, var(--bg) 85%, transparent);
   z-index: 5;
 }
+.topbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim) 30%, var(--crimson) 70%, transparent);
+  opacity: 0.55;
+}
 
 .brand {
-  font-size: 17px;
-  font-weight: 650;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
   letter-spacing: 0.2px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
 }
 
-.brand-mark { color: var(--gold); font-size: 19px; text-shadow: 0 0 14px rgba(212,175,55,0.5); }
+.brand-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  box-shadow: 0 2px 10px -2px rgba(198,38,63,0.6);
+}
 
 .icon-btn {
   width: 38px;
@@ -126,7 +145,8 @@ html, body {
   margin-bottom: 6px;
 }
 .stat-value {
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: 25px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -191,12 +211,12 @@ html, body {
   letter-spacing: 0.6px;
   color: var(--text-faint);
 }
-.trend-total { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.trend-total { font-family: var(--font-display); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-dim); }
 .trend-total.positive { color: var(--green-bright); }
 .trend-total.negative { color: var(--red-bright); }
 .trend-chart { display: flex; justify-content: space-around; gap: 8px; }
 .trend-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
-.trend-value { font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 6px; color: var(--text-faint); white-space: nowrap; }
+.trend-value { font-family: var(--font-display); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 6px; color: var(--text-faint); white-space: nowrap; }
 .trend-value.positive { color: var(--green-bright); }
 .trend-value.negative { color: var(--red-bright); }
 .trend-track { width: 100%; display: flex; flex-direction: column; align-items: center; }
@@ -216,7 +236,7 @@ html, body {
 .session-row-main { min-width: 0; }
 .session-row-title { font-weight: 600; font-size: 14px; }
 .session-row-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
-.session-row-profit { font-weight: 700; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.session-row-profit { font-family: var(--font-display); font-weight: 700; font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .session-row-profit.positive { color: var(--green-bright); }
 .session-row-profit.negative { color: var(--red-bright); }
 .sync-badge {
@@ -310,12 +330,13 @@ input:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
 .active-location { font-size: 18px; font-weight: 700; }
 .active-game { color: var(--text-dim); font-size: 14px; margin-top: 2px; }
 .active-timer {
-  font-size: 34px;
+  font-family: var(--font-display);
+  font-size: 36px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   margin-top: 14px;
   color: var(--gold);
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .invested-card {
@@ -327,7 +348,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
   text-align: center;
   box-shadow: var(--shadow-card);
 }
-.invested-value { font-size: 28px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.invested-value { font-family: var(--font-display); font-size: 30px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .invested-sub { font-size: 12px; color: var(--text-faint); margin-top: 6px; min-height: 16px; }
 
 .addon-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -346,13 +367,13 @@ input:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
   text-align: center;
   padding: 36px 20px 28px;
   border-radius: var(--radius);
-  background: linear-gradient(160deg, var(--surface-raised), var(--surface));
+  background: radial-gradient(circle at 50% 0%, rgba(198,38,63,0.16), transparent 60%), linear-gradient(160deg, var(--surface-raised), var(--surface));
   border: 1px solid var(--border);
   margin-top: 6px;
   box-shadow: var(--shadow-pop);
 }
 .report-hero-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-faint); font-weight: 700; }
-.report-hero-value { font-size: 46px; font-weight: 750; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.report-hero-value { font-family: var(--font-display); font-size: 50px; font-weight: 800; margin-top: 10px; font-variant-numeric: tabular-nums; }
 .report-hero-value.positive { color: var(--green-bright); }
 .report-hero-value.negative { color: var(--red-bright); }
 .report-hero-sub { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
@@ -360,7 +381,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--gold-dim); }
 .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
 .report-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; box-shadow: var(--shadow-card); }
 .report-tile-label { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 6px; }
-.report-tile-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.report-tile-value { font-family: var(--font-display); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .report-tile-value.positive { color: var(--green-bright); }
 .report-tile-value.negative { color: var(--red-bright); }
 
