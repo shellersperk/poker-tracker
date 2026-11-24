@@ -24,8 +24,12 @@ function doPost(e) {
   const row = JSON.parse(e.postData.contents);
 
   // Skip duplicates: if this session ID was already synced, overwrite that row instead of appending.
-  const ids = sheet.getRange(2, HEADERS.length, Math.max(sheet.getLastRow() - 1, 0), 1).getValues().flat();
-  const existingIndex = ids.indexOf(row.id);
+  const lastRow = sheet.getLastRow();
+  let existingIndex = -1;
+  if (lastRow > 1) {
+    const ids = sheet.getRange(2, HEADERS.length, lastRow - 1, 1).getValues().flat();
+    existingIndex = ids.indexOf(row.id);
+  }
 
   const values = [
     row.date || '', row.dayOfWeek || '', row.timeOfDay || '', row.checkIn || '', row.checkOut || '',
