@@ -105,18 +105,19 @@
     }
     return best;
   }
-  function computeDefaults(sessions) {
+  function computeDefaults(sessions, refDate) {
     const all = sessions.slice().sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
     if (!all.length) return { location: '', game: '', buyIn: '' };
 
-    const now = new Date();
-    const bucket = dayBucket(now);
-    const weekday = now.getDay();
-    const matches = all.filter(s => {
+    const ref = refDate || new Date();
+    const bucket = dayBucket(ref);
+    const weekday = ref.getDay();
+    const weekdayBucketMatches = all.filter(s => {
       const d = new Date(s.checkIn);
       return d.getDay() === weekday && dayBucket(d) === bucket;
     });
-    const pool = matches.length ? matches : all;
+    const weekdayMatches = all.filter(s => new Date(s.checkIn).getDay() === weekday);
+    const pool = weekdayBucketMatches.length ? weekdayBucketMatches : (weekdayMatches.length ? weekdayMatches : all);
 
     const location = pickMostFrequent(pool, s => s.location) || pickMostFrequent(all, s => s.location) || '';
     const gamePool = pool.filter(s => s.location === location);
@@ -385,22 +386,30 @@
   }
 
   // ---------- render: log past session ----------
+  function applyPastDefaults() {
+    const sessions = loadSessions();
+    const dateStr = document.getElementById('past-date').value;
+    const timeStr = document.getElementById('past-start').value || '19:00';
+    const ref = dateStr ? new Date(`${dateStr}T${timeStr}`) : new Date();
+    const defaults = computeDefaults(sessions, ref);
+    document.getElementById('past-location').value = defaults.location;
+    document.getElementById('past-game').value = defaults.game;
+    document.getElementById('past-buyin').value = defaults.buyIn;
+  }
+
   function renderPast() {
     const sessions = loadSessions();
-    const defaults = computeDefaults(sessions);
     const yesterday = new Date(Date.now() - 86400000);
 
     document.getElementById('past-date').value = localDateStr(yesterday);
     document.getElementById('past-start').value = '19:00';
     document.getElementById('past-duration').value = '';
-    document.getElementById('past-location').value = defaults.location;
-    document.getElementById('past-game').value = defaults.game;
-    document.getElementById('past-buyin').value = defaults.buyIn;
     document.getElementById('past-addons').value = '';
     document.getElementById('past-cashout').value = '';
     document.getElementById('past-good').value = '';
     document.getElementById('past-bad').value = '';
     document.getElementById('past-action').value = '';
+    applyPastDefaults();
 
     const locList = document.getElementById('location-options');
     locList.innerHTML = distinctRecent(sessions, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
@@ -592,6 +601,8 @@
     document.getElementById('btn-past-session').addEventListener('click', () => showScreen('past'));
     document.getElementById('past-back').addEventListener('click', () => showScreen('home'));
     document.getElementById('btn-save-past').addEventListener('click', savePastSession);
+    document.getElementById('past-date').addEventListener('change', applyPastDefaults);
+    document.getElementById('past-start').addEventListener('change', applyPastDefaults);
     document.getElementById('btn-resume').addEventListener('click', () => showScreen('active'));
     document.getElementById('link-history').addEventListener('click', e => { e.preventDefault(); showScreen('history'); });
 
