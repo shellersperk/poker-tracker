@@ -3,8 +3,8 @@
 // then deploy it as a Web App (see README.md for the full walkthrough).
 
 const SHEET_NAME = 'Sessions';
-const HEADERS = ['Date', 'Day of Week', 'Time of Day', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
-  'Total Invested', 'Cash-Out', 'Profit', 'Duration (hrs)', 'Profit/Hr', 'Good', 'Bad', 'Needs Action', 'Session ID'];
+const HEADERS = ['Date', 'Day of Week', 'Time of Day', 'Type', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
+  'Total Invested', 'Cash-Out', 'Profit', 'Duration (hrs)', 'Profit/Hr', 'Finish Place', 'Field Size', 'Good', 'Bad', 'Needs Action', 'Session ID'];
 
 function getSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -32,9 +32,10 @@ function doPost(e) {
   }
 
   const values = [
-    row.date || '', row.dayOfWeek || '', row.timeOfDay || '', row.checkIn || '', row.checkOut || '',
+    row.date || '', row.dayOfWeek || '', row.timeOfDay || '', row.type || 'cash', row.checkIn || '', row.checkOut || '',
     row.location || '', row.game || '', row.buyIn || 0, row.addOns || 0, row.totalInvested || 0,
     row.cashOut || 0, row.profit || 0, row.durationHours || '', row.profitPerHour || '',
+    row.finishPlace || '', row.fieldSize || '',
     row.notesGood || '', row.notesBad || '', row.notesAction || '', row.id || ''
   ];
 

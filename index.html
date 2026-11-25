@@ -40,10 +40,12 @@
       <div class="stat-card">
         <div class="stat-label">This Month</div>
         <div class="stat-value" id="stat-month">$0</div>
+        <div class="stat-sub" id="stat-month-invested"></div>
       </div>
       <div class="stat-card">
         <div class="stat-label">YTD</div>
         <div class="stat-value" id="stat-ytd">$0</div>
+        <div class="stat-sub" id="stat-ytd-invested"></div>
       </div>
     </div>
 
@@ -74,6 +76,11 @@
     </header>
 
     <div class="form">
+      <div class="type-toggle" id="checkin-type-toggle">
+        <button type="button" class="type-btn active" data-type="cash">Cash Game</button>
+        <button type="button" class="type-btn" data-type="tournament">Tournament</button>
+      </div>
+
       <label class="field">
         <span class="field-label">Where are you playing?</span>
         <input type="text" id="input-location" list="location-options" placeholder="e.g. Harrah's Cherokee" autocomplete="off" />
@@ -97,6 +104,11 @@
       </label>
       <div class="chip-row" id="checkin-buyin-chips"></div>
 
+      <label class="field hidden" id="checkin-fieldsize-field">
+        <span class="field-label">Field size (optional)</span>
+        <input type="number" id="input-fieldsize" inputmode="numeric" min="0" step="1" placeholder="e.g. 85" />
+      </label>
+
       <button class="btn btn-primary btn-large" id="btn-do-checkin">Check In</button>
     </div>
   </section>
@@ -110,6 +122,11 @@
     </header>
 
     <div class="form">
+      <div class="type-toggle" id="past-type-toggle">
+        <button type="button" class="type-btn active" data-type="cash">Cash Game</button>
+        <button type="button" class="type-btn" data-type="tournament">Tournament</button>
+      </div>
+
       <div class="two-col">
         <label class="field">
           <span class="field-label">Date</span>
@@ -144,6 +161,11 @@
       </label>
       <div class="chip-row" id="past-buyin-chips"></div>
 
+      <label class="field hidden" id="past-fieldsize-field">
+        <span class="field-label">Field size (optional)</span>
+        <input type="number" id="past-fieldsize" inputmode="numeric" min="0" step="1" placeholder="e.g. 85" />
+      </label>
+
       <label class="field">
         <span class="field-label">Add-ons (total)</span>
         <div class="money-input"><span>$</span><input type="number" id="past-addons" inputmode="decimal" min="0" step="1" placeholder="0" /></div>
@@ -153,6 +175,11 @@
       <label class="field">
         <span class="field-label">Cash-out amount</span>
         <div class="money-input"><span>$</span><input type="number" id="past-cashout" inputmode="decimal" min="0" step="1" placeholder="0" /></div>
+      </label>
+
+      <label class="field hidden" id="past-place-field">
+        <span class="field-label">Finish place (optional)</span>
+        <input type="number" id="past-place" inputmode="numeric" min="1" step="1" placeholder="e.g. 12" />
       </label>
 
       <label class="field">
@@ -326,6 +353,10 @@
         <input type="number" id="dlg-cashout-amount" inputmode="decimal" min="0" step="1" value="0" />
       </div>
     </label>
+    <label class="field hidden" id="dlg-cashout-place-field">
+      <span class="field-label">Finish place (optional)</span>
+      <input type="number" id="dlg-cashout-place" inputmode="numeric" min="1" step="1" placeholder="e.g. 12" />
+    </label>
     <div class="dialog-actions">
       <button value="cancel" class="btn btn-ghost">Cancel</button>
       <button value="confirm" id="dlg-cashout-confirm" class="btn btn-danger">Cash Out</button>
@@ -370,6 +401,28 @@
     <textarea id="dlg-action-text" rows="4" placeholder="Needs action or attention..."></textarea>
     <div class="dialog-actions">
       <button value="save" id="dlg-action-save" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-edit-notes">
+  <form method="dialog" class="dialog-form">
+    <h3>Edit Notes</h3>
+    <label class="field">
+      <span class="field-label">Good</span>
+      <textarea id="edit-good-text" rows="2" placeholder="What went well..."></textarea>
+    </label>
+    <label class="field">
+      <span class="field-label">Bad</span>
+      <textarea id="edit-bad-text" rows="2" placeholder="What could've gone better..."></textarea>
+    </label>
+    <label class="field">
+      <span class="field-label">Needs Action</span>
+      <textarea id="edit-action-text" rows="2" placeholder="Needs action or attention..."></textarea>
+    </label>
+    <div class="dialog-actions">
+      <button value="cancel" class="btn btn-ghost">Cancel</button>
+      <button value="save" id="dlg-edit-notes-save" class="btn btn-primary">Save</button>
     </div>
   </form>
 </dialog>

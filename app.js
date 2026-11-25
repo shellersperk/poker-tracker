@@ -47,6 +47,23 @@
     return sessions.filter(s => s.status === 'completed' && predicate(s))
       .reduce((sum, s) => sum + profitOf(s), 0);
   }
+  function sumInvested(sessions, predicate) {
+    return sessions.filter(s => s.status === 'completed' && predicate(s))
+      .reduce((sum, s) => sum + totalInvested(s), 0);
+  }
+  function sessionType(s) { return s.type === 'tournament' ? 'tournament' : 'cash'; }
+  function ordinal(n) {
+    const v = Number(n);
+    if (!v) return '';
+    const mod100 = v % 100;
+    if (mod100 >= 11 && mod100 <= 13) return `${v}th`;
+    switch (v % 10) {
+      case 1: return `${v}st`;
+      case 2: return `${v}nd`;
+      case 3: return `${v}rd`;
+      default: return `${v}th`;
+    }
+  }
 
   function formatMoney(n) {
     const v = Math.round((n || 0) * 100) / 100;
@@ -168,6 +185,26 @@
     });
   }
 
+  // ---------- cash / tournament type toggle ----------
+  function wireTypeToggle(containerId, onChange) {
+    const container = document.getElementById(containerId);
+    container.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        onChange(btn.dataset.type);
+      });
+    });
+  }
+  function getToggleType(containerId) {
+    const active = document.querySelector(`#${containerId} .type-btn.active`);
+    return active ? active.dataset.type : 'cash';
+  }
+  function setToggleType(containerId, type) {
+    document.querySelectorAll(`#${containerId} .type-btn`).forEach(b =>
+      b.classList.toggle('active', b.dataset.type === type));
+  }
+
   // ---------- CSV ----------
   function sessionToRow(s) {
     const invested = totalInvested(s);
@@ -177,6 +214,7 @@
     const checkInDate = s.checkIn ? new Date(s.checkIn) : null;
     return {
       id: s.id,
+      type: sessionType(s),
       date: checkInDate ? localDateStr(checkInDate) : '',
       dayOfWeek: checkInDate ? checkInDate.toLocaleDateString('en-US', { weekday: 'long' }) : '',
       timeOfDay: checkInDate ? timeBucketLabel(checkInDate) : '',
@@ -191,6 +229,8 @@
       profit: profit,
       durationHours: hours ? Math.round(hours * 100) / 100 : '',
       profitPerHour: pph !== '' ? Math.round(pph * 100) / 100 : '',
+      finishPlace: s.place != null ? s.place : '',
+      fieldSize: s.fieldSize != null ? s.fieldSize : '',
       notesGood: s.notes ? (s.notes.good || '') : '',
       notesBad: s.notes ? (s.notes.bad || '') : '',
       notesAction: s.notes ? (s.notes.action || '') : ''
@@ -202,15 +242,15 @@
     return s;
   }
   function toCSV(sessions) {
-    const headers = ['Date', 'Day of Week', 'Time of Day', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
-      'Total Invested', 'Cash-Out', 'Profit', 'Duration (hrs)', 'Profit/Hr', 'Good', 'Bad', 'Needs Action'];
+    const headers = ['Date', 'Day of Week', 'Time of Day', 'Type', 'Check-In', 'Check-Out', 'Location', 'Game', 'Buy-In', 'Add-Ons',
+      'Total Invested', 'Cash-Out', 'Profit', 'Duration (hrs)', 'Profit/Hr', 'Finish Place', 'Field Size', 'Good', 'Bad', 'Needs Action'];
     const rows = sessions.filter(s => s.status === 'completed')
       .sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn))
       .map(sessionToRow);
     const lines = [headers.join(',')];
     for (const r of rows) {
-      lines.push([r.date, r.dayOfWeek, r.timeOfDay, r.checkIn, r.checkOut, r.location, r.game, r.buyIn, r.addOns,
-        r.totalInvested, r.cashOut, r.profit, r.durationHours, r.profitPerHour,
+      lines.push([r.date, r.dayOfWeek, r.timeOfDay, r.type, r.checkIn, r.checkOut, r.location, r.game, r.buyIn, r.addOns,
+        r.totalInvested, r.cashOut, r.profit, r.durationHours, r.profitPerHour, r.finishPlace, r.fieldSize,
         r.notesGood, r.notesBad, r.notesAction].map(csvEscape).join(','));
     }
     return lines.join('\n');
@@ -326,6 +366,14 @@
     setStat('stat-month', month);
     setStat('stat-ytd', ytd);
 
+    const monthInvested = sumInvested(sessions, s => {
+      const d = new Date(s.checkIn);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+    const ytdInvested = sumInvested(sessions, s => new Date(s.checkIn).getFullYear() === now.getFullYear());
+    document.getElementById('stat-month-invested').textContent = `Buy-ins ${formatMoney(monthInvested)}`;
+    document.getElementById('stat-ytd-invested').textContent = `Buy-ins ${formatMoney(ytdInvested)}`;
+
     const recent = sessions.filter(s => s.status === 'completed')
       .sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn))
       .slice(0, 3);
@@ -416,19 +464,40 @@
     const invested = totalInvested(s);
     const profit = profitOf(s);
     const hours = durationHours(s);
+    const isTourney = sessionType(s) === 'tournament';
     const row = document.createElement('div');
     row.className = 'session-row';
 
     const top = document.createElement('div');
     top.className = 'session-row-top';
-    top.innerHTML = `
-      <div class="session-row-main">
-        <div class="session-row-title">${escapeHtml(s.location || 'Session')}</div>
-        <div class="session-row-sub">${formatDateShort(s.checkIn)} · ${escapeHtml(s.game || '')} · ${formatDuration(hours)}</div>
-        ${syncBadgeHtml(s)}
-      </div>
-      <div class="session-row-profit ${profit >= 0 ? 'positive' : 'negative'}">${formatMoney(profit)}</div>
+
+    const subParts = [formatDateShort(s.checkIn), escapeHtml(s.game || ''), formatDuration(hours)];
+    if (isTourney && s.place) {
+      subParts.push(`Finished ${ordinal(s.place)}${s.fieldSize ? ` of ${s.fieldSize}` : ''}`);
+    }
+    const main = document.createElement('div');
+    main.className = 'session-row-main';
+    main.innerHTML = `
+      <div class="session-row-title">${escapeHtml(s.location || 'Session')}</div>
+      <div class="session-row-sub">${subParts.filter(Boolean).join(' · ')}</div>
+      ${isTourney ? '<div><span class="session-row-tag">Tournament</span></div>' : ''}
+      ${syncBadgeHtml(s)}
     `;
+
+    const right = document.createElement('div');
+    right.className = 'session-row-right';
+    const profitEl = document.createElement('div');
+    profitEl.className = `session-row-profit ${profit >= 0 ? 'positive' : 'negative'}`;
+    profitEl.textContent = formatMoney(profit);
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'session-edit-btn';
+    editBtn.setAttribute('aria-label', 'Edit notes');
+    editBtn.textContent = '✎';
+    editBtn.addEventListener('click', e => { e.stopPropagation(); openEditNotes(s.id); });
+    right.append(profitEl, editBtn);
+
+    top.append(main, right);
     row.appendChild(top);
 
     const hasNotes = s.notes && (s.notes.good || s.notes.bad || s.notes.action);
@@ -448,40 +517,83 @@
     return row;
   }
 
+  // ---------- edit notes after the fact ----------
+  let editingSessionId = null;
+  function openEditNotes(id) {
+    const sessions = loadSessions();
+    const s = sessions.find(x => x.id === id);
+    if (!s) return;
+    editingSessionId = id;
+    document.getElementById('edit-good-text').value = s.notes ? (s.notes.good || '') : '';
+    document.getElementById('edit-bad-text').value = s.notes ? (s.notes.bad || '') : '';
+    document.getElementById('edit-action-text').value = s.notes ? (s.notes.action || '') : '';
+    document.getElementById('dlg-edit-notes').showModal();
+  }
+  function saveEditedNotes() {
+    if (!editingSessionId) return;
+    const sessions = loadSessions();
+    const idx = sessions.findIndex(x => x.id === editingSessionId);
+    if (idx === -1) { editingSessionId = null; return; }
+    const good = document.getElementById('edit-good-text').value.trim();
+    const bad = document.getElementById('edit-bad-text').value.trim();
+    const action = document.getElementById('edit-action-text').value.trim();
+    sessions[idx].notes = (good || bad || action) ? { good, bad, action } : null;
+    saveSessions(sessions);
+    const id = editingSessionId;
+    editingSessionId = null;
+    refreshSyncBadges();
+    queueSync(id);
+    toast('Notes saved');
+  }
+
   // ---------- render: check-in ----------
   function renderCheckin() {
-    const sessions = loadSessions();
-    const defaults = computeDefaults(sessions);
+    setToggleType('checkin-type-toggle', 'cash');
+    document.getElementById('input-fieldsize').value = '';
+    renderCheckinPickers('cash');
+  }
+
+  function renderCheckinPickers(type) {
+    const all = loadSessions();
+    const scoped = all.filter(s => sessionType(s) === type);
+    const pool = scoped.length ? scoped : all;
+    const defaults = computeDefaults(pool);
     document.getElementById('input-location').value = defaults.location;
     document.getElementById('input-game').value = defaults.game;
     document.getElementById('input-buyin').value = defaults.buyIn;
 
     const locList = document.getElementById('location-options');
-    locList.innerHTML = distinctRecent(sessions, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
+    locList.innerHTML = distinctRecent(pool, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
     const gameList = document.getElementById('game-options');
-    gameList.innerHTML = distinctRecent(sessions, s => s.game).map(v => `<option value="${escapeHtml(v)}">`).join('');
+    gameList.innerHTML = distinctRecent(pool, s => s.game).map(v => `<option value="${escapeHtml(v)}">`).join('');
 
-    buildChips(document.getElementById('checkin-location-chips'), topFrequent(sessions, s => s.location, 4),
+    buildChips(document.getElementById('checkin-location-chips'), topFrequent(pool, s => s.location, 4),
       v => { document.getElementById('input-location').value = v; });
-    buildChips(document.getElementById('checkin-game-chips'), topFrequent(sessions, s => s.game, 4),
+    buildChips(document.getElementById('checkin-game-chips'), topFrequent(pool, s => s.game, 4),
       v => { document.getElementById('input-game').value = v; });
-    buildChips(document.getElementById('checkin-buyin-chips'), topFrequent(sessions, s => s.buyIn, 4),
+    buildChips(document.getElementById('checkin-buyin-chips'), topFrequent(pool, s => s.buyIn, 4),
       v => { document.getElementById('input-buyin').value = v; }, formatMoney);
+
+    document.getElementById('checkin-fieldsize-field').classList.toggle('hidden', type !== 'tournament');
   }
 
   function doCheckin() {
+    const type = getToggleType('checkin-type-toggle');
     const location = document.getElementById('input-location').value.trim();
     const game = document.getElementById('input-game').value.trim();
     const buyIn = Number(document.getElementById('input-buyin').value) || 0;
+    const fieldSize = type === 'tournament' ? (Number(document.getElementById('input-fieldsize').value) || null) : null;
     if (!location) { toast('Enter where you’re playing'); return; }
 
     const session = {
       id: uid(),
+      type,
       checkIn: new Date().toISOString(),
       checkOut: null,
       location, game, buyIn,
       addOns: [],
       cashOut: null,
+      fieldSize, place: null,
       notes: null,
       status: 'active'
     };
@@ -492,47 +604,56 @@
   }
 
   // ---------- render: log past session ----------
-  function applyPastDefaults() {
-    const sessions = loadSessions();
+  function applyPastDefaults(type) {
+    type = type || getToggleType('past-type-toggle');
+    const all = loadSessions();
+    const scoped = all.filter(s => sessionType(s) === type);
+    const pool = scoped.length ? scoped : all;
     const dateStr = document.getElementById('past-date').value;
     const timeStr = document.getElementById('past-start').value || '19:00';
     const ref = dateStr ? new Date(`${dateStr}T${timeStr}`) : new Date();
-    const defaults = computeDefaults(sessions, ref);
+    const defaults = computeDefaults(pool, ref);
     document.getElementById('past-location').value = defaults.location;
     document.getElementById('past-game').value = defaults.game;
     document.getElementById('past-buyin').value = defaults.buyIn;
+
+    const locList = document.getElementById('location-options');
+    locList.innerHTML = distinctRecent(pool, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
+    const gameList = document.getElementById('game-options');
+    gameList.innerHTML = distinctRecent(pool, s => s.game).map(v => `<option value="${escapeHtml(v)}">`).join('');
+
+    buildChips(document.getElementById('past-location-chips'), topFrequent(pool, s => s.location, 4),
+      v => { document.getElementById('past-location').value = v; });
+    buildChips(document.getElementById('past-game-chips'), topFrequent(pool, s => s.game, 4),
+      v => { document.getElementById('past-game').value = v; });
+    buildChips(document.getElementById('past-buyin-chips'), topFrequent(pool, s => s.buyIn, 4),
+      v => { document.getElementById('past-buyin').value = v; }, formatMoney);
+    buildChips(document.getElementById('past-addons-chips'), REBUY_PRESETS,
+      v => { document.getElementById('past-addons').value = v; }, formatMoney);
+
+    document.getElementById('past-fieldsize-field').classList.toggle('hidden', type !== 'tournament');
+    document.getElementById('past-place-field').classList.toggle('hidden', type !== 'tournament');
   }
 
   function renderPast() {
-    const sessions = loadSessions();
     const yesterday = new Date(Date.now() - 86400000);
 
     document.getElementById('past-date').value = localDateStr(yesterday);
     document.getElementById('past-start').value = '19:00';
     document.getElementById('past-duration').value = '';
+    document.getElementById('past-fieldsize').value = '';
     document.getElementById('past-addons').value = '';
     document.getElementById('past-cashout').value = '';
+    document.getElementById('past-place').value = '';
     document.getElementById('past-good').value = '';
     document.getElementById('past-bad').value = '';
     document.getElementById('past-action').value = '';
-    applyPastDefaults();
-
-    const locList = document.getElementById('location-options');
-    locList.innerHTML = distinctRecent(sessions, s => s.location).map(v => `<option value="${escapeHtml(v)}">`).join('');
-    const gameList = document.getElementById('game-options');
-    gameList.innerHTML = distinctRecent(sessions, s => s.game).map(v => `<option value="${escapeHtml(v)}">`).join('');
-
-    buildChips(document.getElementById('past-location-chips'), topFrequent(sessions, s => s.location, 4),
-      v => { document.getElementById('past-location').value = v; });
-    buildChips(document.getElementById('past-game-chips'), topFrequent(sessions, s => s.game, 4),
-      v => { document.getElementById('past-game').value = v; });
-    buildChips(document.getElementById('past-buyin-chips'), topFrequent(sessions, s => s.buyIn, 4),
-      v => { document.getElementById('past-buyin').value = v; }, formatMoney);
-    buildChips(document.getElementById('past-addons-chips'), REBUY_PRESETS,
-      v => { document.getElementById('past-addons').value = v; }, formatMoney);
+    setToggleType('past-type-toggle', 'cash');
+    applyPastDefaults('cash');
   }
 
   function savePastSession() {
+    const type = getToggleType('past-type-toggle');
     const dateStr = document.getElementById('past-date').value;
     const timeStr = document.getElementById('past-start').value;
     const duration = Number(document.getElementById('past-duration').value);
@@ -541,6 +662,8 @@
     const buyIn = Number(document.getElementById('past-buyin').value) || 0;
     const addOnsTotal = Number(document.getElementById('past-addons').value) || 0;
     const cashOut = Number(document.getElementById('past-cashout').value) || 0;
+    const fieldSize = type === 'tournament' ? (Number(document.getElementById('past-fieldsize').value) || null) : null;
+    const place = type === 'tournament' ? (Number(document.getElementById('past-place').value) || null) : null;
     const good = document.getElementById('past-good').value.trim();
     const bad = document.getElementById('past-bad').value.trim();
     const action = document.getElementById('past-action').value.trim();
@@ -554,9 +677,11 @@
 
     const session = {
       id: uid(),
+      type,
       checkIn, checkOut, location, game, buyIn,
       addOns: addOnsTotal > 0 ? [{ amount: addOnsTotal, time: checkIn }] : [],
       cashOut,
+      fieldSize, place,
       notes: (good || bad || action) ? { good, bad, action } : null,
       status: 'completed'
     };
@@ -585,16 +710,18 @@
   function renderActive() {
     const session = getActiveSession();
     if (!session) { showScreen('home'); return; }
+    const isTourney = sessionType(session) === 'tournament';
 
     document.getElementById('active-location').textContent = session.location || '—';
     document.getElementById('active-game').textContent = session.game || '—';
     document.getElementById('active-invested').textContent = formatMoney(totalInvested(session));
     document.getElementById('active-invested-sub').textContent =
-      lastAddonAmount != null ? `+${formatMoney(lastAddonAmount)} last add-on` : `Buy-in ${formatMoney(session.buyIn)}`;
+      lastAddonAmount != null ? `+${formatMoney(lastAddonAmount)} last ${isTourney ? 're-entry' : 'add-on'}` : `Buy-in ${formatMoney(session.buyIn)}`;
+    document.getElementById('btn-addon').textContent = isTourney ? '+ Re-Entry' : '+ Add-On';
 
     const list = document.getElementById('addon-list');
     list.innerHTML = (session.addOns || []).map(a =>
-      `<div class="addon-row"><span>Add-on</span><span>${formatMoney(a.amount)} · ${formatTime(a.time)}</span></div>`
+      `<div class="addon-row"><span>${isTourney ? 'Re-Entry' : 'Add-on'}</span><span>${formatMoney(a.amount)} · ${formatTime(a.time)}</span></div>`
     ).join('');
 
     stopActiveTimer();
@@ -618,6 +745,7 @@
 
   // ---------- cash-out / notes flow ----------
   let pendingCashout = null;
+  let pendingPlace = null;
   let draftNotes = null;
 
   function finalizeSession(notes) {
@@ -627,6 +755,7 @@
     const s = sessions[idx];
     s.checkOut = new Date().toISOString();
     s.cashOut = pendingCashout;
+    if (sessionType(s) === 'tournament' && pendingPlace != null) s.place = pendingPlace;
     s.notes = notes;
     s.status = 'completed';
     sessions[idx] = s;
@@ -634,6 +763,7 @@
     queueSync(s.id);
 
     pendingCashout = null;
+    pendingPlace = null;
     draftNotes = null;
     lastAddonAmount = null;
     renderReport(s, sessions);
@@ -650,7 +780,10 @@
     const heroVal = document.getElementById('report-profit');
     heroVal.textContent = formatMoney(profit);
     heroVal.className = 'report-hero-value ' + (profit >= 0 ? 'positive' : 'negative');
-    document.getElementById('report-location').textContent = `${session.location || ''} · ${session.game || ''}`;
+    const finishSuffix = sessionType(session) === 'tournament' && session.place
+      ? ` · Finished ${ordinal(session.place)}${session.fieldSize ? ` of ${session.fieldSize}` : ''}`
+      : '';
+    document.getElementById('report-location').textContent = `${session.location || ''} · ${session.game || ''}${finishSuffix}`;
     document.getElementById('report-duration').textContent = formatDuration(hours);
 
     const pphEl = document.getElementById('report-pph');
@@ -733,8 +866,10 @@
     document.getElementById('btn-past-session').addEventListener('click', () => showScreen('past'));
     document.getElementById('past-back').addEventListener('click', () => showScreen('home'));
     document.getElementById('btn-save-past').addEventListener('click', savePastSession);
-    document.getElementById('past-date').addEventListener('change', applyPastDefaults);
-    document.getElementById('past-start').addEventListener('change', applyPastDefaults);
+    document.getElementById('past-date').addEventListener('change', () => applyPastDefaults());
+    document.getElementById('past-start').addEventListener('change', () => applyPastDefaults());
+    wireTypeToggle('checkin-type-toggle', type => renderCheckinPickers(type));
+    wireTypeToggle('past-type-toggle', type => applyPastDefaults(type));
 
     ['input-location', 'input-game', 'past-location', 'past-game'].forEach(id =>
       setupDatalistDefault(document.getElementById(id))
@@ -755,6 +890,10 @@
     });
     document.getElementById('btn-cashout').addEventListener('click', () => {
       document.getElementById('dlg-cashout-amount').value = 0;
+      document.getElementById('dlg-cashout-place').value = '';
+      const activeSession = getActiveSession();
+      const isTourney = activeSession && sessionType(activeSession) === 'tournament';
+      document.getElementById('dlg-cashout-place-field').classList.toggle('hidden', !isTourney);
       document.getElementById('dlg-cashout').showModal();
     });
 
@@ -767,6 +906,7 @@
     document.getElementById('dlg-cashout').addEventListener('close', e => {
       if (e.target.returnValue === 'confirm') {
         pendingCashout = Number(document.getElementById('dlg-cashout-amount').value) || 0;
+        pendingPlace = Number(document.getElementById('dlg-cashout-place').value) || null;
         document.getElementById('dlg-notes-prompt').showModal();
       }
     });
@@ -798,6 +938,11 @@
 
     document.getElementById('history-back').addEventListener('click', () => showScreen('home'));
     document.getElementById('btn-export-csv-history').addEventListener('click', downloadCSV);
+
+    document.getElementById('dlg-edit-notes').addEventListener('close', e => {
+      if (e.target.returnValue === 'save') saveEditedNotes();
+      else editingSessionId = null;
+    });
 
     document.getElementById('settings-back').addEventListener('click', () => showScreen('home'));
     document.getElementById('btn-save-sheets').addEventListener('click', () => {
